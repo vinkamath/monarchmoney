@@ -2842,25 +2842,58 @@ class MonarchMoney(object):
         Performs the initial login to a Monarch Money account.
         """
         data = {
-            "password": password,
-            "supports_mfa": True,
-            "trusted_device": False,
             "username": email,
+            "password": password,
+            "trusted_device": True,
+            "supports_mfa": True,
+            "supports_email_otp": True,
+            "supports_recaptcha": True,
         }
 
         if mfa_secret_key:
-            data["totp"] = oathtool.generate_otp(mfa_secret_key)
+            # Check if it's a 6-digit TOTP code or a secret key
+            if mfa_secret_key.isdigit() and len(mfa_secret_key) == 6:
+                # It's already a TOTP code, use it directly
+                data["totp"] = mfa_secret_key
+            else:
+                # It's a secret key, generate the TOTP
+                data["totp"] = oathtool.generate_otp(mfa_secret_key)
 
-        async with ClientSession(headers=self._headers) as session:
+        async with ClientSession() as session:
+            # Merge headers for this specific request
+            request_headers = self._headers.copy()
+
             async with session.post(
-                MonarchMoneyEndpoints.getLoginEndpoint(), json=data
+                MonarchMoneyEndpoints.getLoginEndpoint(),
+                json=data,
+                headers=request_headers,
             ) as resp:
                 if resp.status == 403:
                     raise RequireMFAException("Multi-Factor Auth Required")
+                elif resp.status == 404:
+                    # 404 can mean either endpoint doesn't exist OR invalid MFA code
+                    # Check response body for details
+                    try:
+                        response_json = await resp.json()
+                        error_detail = response_json.get("detail", "Unknown error")
+                        raise LoginFailedException(f"Login failed: {error_detail}")
+                    except json.JSONDecodeError:
+                        raise LoginFailedException(
+                            "Authentication endpoint not found (404). "
+                            "Monarch Money may have changed their API."
+                        )
                 elif resp.status != 200:
-                    raise LoginFailedException(
-                        f"HTTP Code {resp.status}: {resp.reason}"
-                    )
+                    try:
+                        response_json = await resp.json()
+                        error_detail = response_json.get(
+                            "detail", response_json.get("error_code", "Unknown error")
+                        )
+                        raise LoginFailedException(f"Login failed: {error_detail}")
+                    except (json.JSONDecodeError, KeyError):
+                        # If we can't parse JSON, just use the status code
+                        raise LoginFailedException(
+                            f"HTTP Code {resp.status}: {resp.reason}"
+                        )
 
                 response = await resp.json()
                 self.set_token(response["token"])
@@ -2873,11 +2906,13 @@ class MonarchMoney(object):
         Performs the MFA step of login.
         """
         data = {
-            "password": password,
-            "supports_mfa": True,
-            "totp": code,
-            "trusted_device": False,
             "username": email,
+            "password": password,
+            "totp": code,
+            "trusted_device": True,
+            "supports_mfa": True,
+            "supports_email_otp": True,
+            "supports_recaptcha": True,
         }
 
         async with ClientSession(headers=self._headers) as session:
