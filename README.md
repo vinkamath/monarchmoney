@@ -1,6 +1,6 @@
 # Monarch Money
 
-Python library for accessing [Monarch Money](https://www.monarchmoney.com/referral/ngam2i643l) data.
+Python library for accessing [Monarch Money](https://www.monarchmoney.com/referral/2zjygvbrc9) data.
 
 # Installation
 
@@ -8,7 +8,7 @@ Python library for accessing [Monarch Money](https://www.monarchmoney.com/referr
 
 Clone this repository from Git
 
-`git clone https://github.com/hammem/monarchmoney.git`
+`git clone https://github.com/vinkamath/monarchmoney.git`
 
 ## Via `pip`
 
@@ -156,8 +156,3 @@ If you currently use Google or 'Continue with Google' to access your Monarch acc
 
 Don't forget to use a password unique to your Monarch account and to enable multi-factor authentication!
 
-# Projects Using This Library
-
-*Disclaimer: These projects are neither affiliated nor endorsed by the `monarchmoney` project.*
-
-- [monarch-money-amazon-connector](https://github.com/elsell/monarch-money-amazon-connector): Automate annotating and tagging Amazon transactions (ALPHA)
