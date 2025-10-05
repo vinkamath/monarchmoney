@@ -1,15 +1,32 @@
-bin
-build
-include
-lib
-.env
-.DS_Store
-.mm
-.monarchmoney.egg-info
-.pytest_cache
-.venv
-.vscode
+# Python
 *.pyc
-__pycache__
-dist
+__pycache__/
+
+# Virtual Environments
+.venv/
+env/
+bin/
+include/
+lib/
+
+# Package Build & Distribution
+build/
+dist/
+*.egg-info/
+.monarchmoney.egg-info/
 MANIFEST
+
+# Testing
+.pytest_cache/
+
+# IDE & Editor
+.vscode/
+
+# Environment Variables
+.env
+
+# Application Specific
+.mm
+
+# OS Specific
+.DS_Store
